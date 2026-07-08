@@ -72,10 +72,13 @@ public class GunadarmaBankGUI extends JFrame {
     private static final Color BORDER = new Color(224, 217, 232);
     private static final Color FIELD_BORDER = new Color(211, 202, 222);
     private static final Color SECONDARY_BUTTON = new Color(244, 241, 247);
+    private static final Color TABLE_HEADER_BG = new Color(236, 226, 244);
 
     private static final Font FONT_BASE = new Font("Segoe UI", Font.PLAIN, 14);
     private static final Font FONT_MEDIUM = new Font("Segoe UI", Font.BOLD, 14);
     private static final Font FONT_SECTION = new Font("Segoe UI", Font.BOLD, 20);
+
+    private static final int FORM_MAX_WIDTH = 480;
 
     private final Bank bank;
     private final CardLayout rootLayout;
@@ -161,12 +164,13 @@ public class GunadarmaBankGUI extends JFrame {
 
         brandGbc.gridy++;
         brandGbc.insets = new Insets(0, 0, 0, 0);
-        JLabel subtitle = new JLabel("Mobile Banking");
+        JLabel subtitle = new JLabel("Desktop Banking");
         subtitle.setFont(new Font("Segoe UI", Font.PLAIN, 20));
         subtitle.setForeground(MUTED);
         brand.add(subtitle, brandGbc);
 
         JTabbedPane tabs = new JTabbedPane();
+        tabs.setFocusable(false);
         tabs.setBorder(BorderFactory.createEmptyBorder());
         tabs.addTab("Login", createLoginPanel());
         tabs.addTab("Daftar Akun", createRegisterPanel());
@@ -364,7 +368,11 @@ public class GunadarmaBankGUI extends JFrame {
         grid.add(summaryCard("Nama", currentUser.getFullName(), PRIMARY));
         grid.add(summaryCard("No. Rek", currentUser.getAccount().getAccountNumber(), ACCENT_DARK));
         grid.add(summaryCard("Saldo", Formatter.formatCurrency(currentUser.getAccount().getBalance()), SUCCESS));
-        setContent(viewShell("Cek Saldo", grid));
+
+        JPanel cardsWrap = new JPanel(new BorderLayout());
+        cardsWrap.setOpaque(false);
+        cardsWrap.add(grid, BorderLayout.NORTH);
+        setContent(viewShell("Cek Saldo", cardsWrap));
     }
 
     private void showDepositView() {
@@ -396,7 +404,7 @@ public class GunadarmaBankGUI extends JFrame {
             }
         }));
         addWide(form, submit, gbc, 3);
-        setContent(viewShell("Setor Tunai", form));
+        setContent(viewShell("Setor Tunai", centerHorizontally(form)));
     }
 
     private void showWithdrawView() {
@@ -427,7 +435,7 @@ public class GunadarmaBankGUI extends JFrame {
             }
         }));
         addWide(form, submit, gbc, 4);
-        setContent(viewShell("Tarik Tunai", form));
+        setContent(viewShell("Tarik Tunai", centerHorizontally(form)));
     }
 
     private void showTransferView() {
@@ -492,7 +500,7 @@ public class GunadarmaBankGUI extends JFrame {
             }
         }));
         addWide(form, submit, gbc, 7);
-        setContent(viewShell("Transfer", form));
+        setContent(viewShell("Transfer", centerHorizontally(form)));
     }
 
     private void showHistoryView() {
@@ -520,9 +528,10 @@ public class GunadarmaBankGUI extends JFrame {
         table.setSelectionBackground(new Color(236, 226, 244));
         table.setSelectionForeground(TEXT);
         JTableHeader tableHeader = table.getTableHeader();
-        tableHeader.setBackground(SURFACE_ALT);
-        tableHeader.setForeground(TEXT);
+        tableHeader.setBackground(TABLE_HEADER_BG);
+        tableHeader.setForeground(PRIMARY);
         tableHeader.setPreferredSize(new Dimension(0, 42));
+        tableHeader.setDefaultRenderer(new FlatTableHeaderRenderer(SwingConstants.LEFT));
         DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
         renderer.setBorder(new EmptyBorder(0, 12, 0, 12));
         table.setDefaultRenderer(Object.class, renderer);
@@ -530,6 +539,7 @@ public class GunadarmaBankGUI extends JFrame {
         amountRenderer.setHorizontalAlignment(SwingConstants.RIGHT);
         amountRenderer.setBorder(new EmptyBorder(0, 12, 0, 12));
         table.getColumnModel().getColumn(2).setCellRenderer(amountRenderer);
+        table.getColumnModel().getColumn(2).setHeaderRenderer(new FlatTableHeaderRenderer(SwingConstants.RIGHT));
 
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(BorderFactory.createLineBorder(BORDER));
@@ -577,7 +587,7 @@ public class GunadarmaBankGUI extends JFrame {
             }
         }));
         addWide(form, submit, gbc, 4);
-        setContent(viewShell("Ganti PIN", form));
+        setContent(viewShell("Ganti PIN", centerHorizontally(form)));
     }
 
     private void logout() {
@@ -615,24 +625,44 @@ public class GunadarmaBankGUI extends JFrame {
     }
 
     private JPanel summaryCard(String label, String value, Color accent) {
-        JPanel card = createSurfacePanel(new BorderLayout(0, 10));
+        JPanel card = createSurfacePanel(new GridBagLayout());
         card.setBorder(new EmptyBorder(22, 22, 22, 22));
-        JLabel top = new JLabel(label);
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.anchor = GridBagConstraints.CENTER;
+
+        JLabel top = new JLabel(label, SwingConstants.CENTER);
         top.setForeground(MUTED);
         top.setFont(FONT_BASE);
-        JLabel main = new JLabel(value);
+        gbc.gridy = 0;
+        gbc.insets = new Insets(0, 0, 10, 0);
+        card.add(top, gbc);
+
+        JLabel main = new JLabel(value, SwingConstants.CENTER);
         main.setForeground(accent);
         main.setFont(new Font("Segoe UI", Font.BOLD, 22));
-        card.add(top, BorderLayout.NORTH);
-        card.add(main, BorderLayout.CENTER);
+        gbc.gridy = 1;
+        gbc.insets = new Insets(0, 0, 0, 0);
+        card.add(main, gbc);
+
         return card;
     }
 
     private JPanel createFormCard() {
-        JPanel form = createSurfacePanel(new GridBagLayout());
+        RoundedPanel form = createSurfacePanel(new GridBagLayout());
         form.setBorder(new EmptyBorder(24, 24, 24, 24));
-        form.setPreferredSize(new Dimension(520, 360));
+        form.setMaxWidth(FORM_MAX_WIDTH);
         return form;
+    }
+
+    private JPanel centerHorizontally(JComponent component) {
+        JPanel wrap = new JPanel(new GridBagLayout());
+        wrap.setOpaque(false);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.anchor = GridBagConstraints.NORTH;
+        wrap.add(component, gbc);
+        return wrap;
     }
 
     private JLabel sectionLabel(String text) {
@@ -693,10 +723,7 @@ public class GunadarmaBankGUI extends JFrame {
         JButton button = button(text, SIDEBAR, SIDEBAR_TEXT);
         button.setHorizontalAlignment(SwingConstants.LEFT);
         button.setBorder(new EmptyBorder(11, 14, 11, 14));
-        button.addActionListener(e -> {
-            activeNavButton = button;
-            action.run();
-        });
+        button.addActionListener(e -> action.run());
         return button;
     }
 
@@ -740,7 +767,7 @@ public class GunadarmaBankGUI extends JFrame {
         return null;
     }
 
-    private JPanel createSurfacePanel(LayoutManager layout) {
+    private RoundedPanel createSurfacePanel(LayoutManager layout) {
         return new RoundedPanel(layout, SURFACE, BORDER, 14);
     }
 
@@ -894,6 +921,7 @@ public class GunadarmaBankGUI extends JFrame {
         private final Color fill;
         private final Color stroke;
         private final int radius;
+        private int maxWidth = -1;
 
         RoundedPanel(LayoutManager layout, Color fill, Color stroke, int radius) {
             super(layout);
@@ -901,6 +929,19 @@ public class GunadarmaBankGUI extends JFrame {
             this.stroke = stroke;
             this.radius = radius;
             setOpaque(false);
+        }
+
+        void setMaxWidth(int maxWidth) {
+            this.maxWidth = maxWidth;
+        }
+
+        @Override
+        public Dimension getPreferredSize() {
+            Dimension size = super.getPreferredSize();
+            if (maxWidth > 0 && size.width > maxWidth) {
+                return new Dimension(maxWidth, size.height);
+            }
+            return size;
         }
 
         @Override
@@ -943,6 +984,28 @@ public class GunadarmaBankGUI extends JFrame {
         public Insets getBorderInsets(Component c, Insets insets) {
             insets.set(1, 1, 1, 1);
             return insets;
+        }
+    }
+
+    private static class FlatTableHeaderRenderer extends DefaultTableCellRenderer {
+        FlatTableHeaderRenderer(int alignment) {
+            setOpaque(true);
+            setFont(FONT_MEDIUM);
+            setHorizontalAlignment(alignment);
+            setForeground(PRIMARY);
+            setBackground(TABLE_HEADER_BG);
+            setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createMatteBorder(0, 0, 1, 0, BORDER),
+                    new EmptyBorder(0, 12, 0, 12)));
+        }
+
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+                boolean hasFocus, int row, int column) {
+            super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            setBackground(TABLE_HEADER_BG);
+            setForeground(PRIMARY);
+            return this;
         }
     }
 
