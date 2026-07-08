@@ -56,7 +56,6 @@ public class GunadarmaBankGUI extends JFrame {
 
     private static final Color BACKGROUND = new Color(248, 247, 251);
     private static final Color SURFACE = Color.WHITE;
-    private static final Color SURFACE_ALT = new Color(251, 249, 253);
     private static final Color SIDEBAR = new Color(42, 27, 53);
     private static final Color SIDEBAR_HOVER = new Color(57, 38, 73);
     private static final Color SIDEBAR_TEXT = new Color(243, 240, 247);
